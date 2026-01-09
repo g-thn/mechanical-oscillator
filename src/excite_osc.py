@@ -167,29 +167,29 @@ def main():
     print('Starting simulation')
     osc.solve(0, 500, 0.01)
     osc.plot()
-    # m = 1.0
-    # k = 1.0
-    # l = 1.0
+    m = 1.0
+    k = 1.0
+    l = 1.0
 
-    # freq = np.array([0.1]) # Hz
-    # freq = (k/m)**.5*np.linspace(0.99, 1.01, 101)/(2*np.pi)
-    # print(freq)
-    # #for n in range(1, 100):
-    # #   freq = np.append(freq, freq[-1]*1.01)
-    # print(freq)
+    freq = np.array([0.1]) # Hz
+    freq = (k/m)**.5*np.linspace(0.5, 1.5, 101)/(2*np.pi)
+    print(freq)
+    #for n in range(1, 100):
+    #   freq = np.append(freq, freq[-1]*1.01)
+    print(freq)
     
-    # ampl = np.array([])
-    # for freq_tmp in freq:
-    #    osc = Oscillator(m,k,l,excitation=freq_tmp)
-    #    osc.eqGenerator()
-    #    osc.setConditions(1.0,0.0)
-    #    print('Starting simulation freq = {}'.format(freq_tmp))
-    #    osc.solve(0, 1000, 0.1)
-    #    ampl = np.append(ampl, np.max(osc.stVec[:, 0]))
+    ampl = np.array([])
+    for freq_tmp in freq:
+       osc = Oscillator(m,k,l,excitation=freq_tmp)
+       osc.eqGenerator()
+       osc.setConditions(1.0,0.0)
+       print('Starting simulation freq = {}'.format(freq_tmp))
+       osc.solve(0, 1000, 0.1)
+       ampl = np.append(ampl, np.max(osc.stVec[:, 0]))
     
-    # plt.plot(freq, ampl)
-    # plt.plot([(osc.k12/osc.m2)**.5/(2*np.pi), (osc.k12/osc.m2)**.5/(2*np.pi)], [0, 1.1*np.max(ampl)], 'r--')
-    # plt.show()
+    plt.plot(freq, ampl)
+    plt.plot([(osc.k12/osc.m2)**.5/(2*np.pi), (osc.k12/osc.m2)**.5/(2*np.pi)], [0, 1.1*np.max(ampl)], 'r--')
+    plt.show()
 
     
 if __name__ == "__main__":

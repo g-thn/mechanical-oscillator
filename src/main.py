@@ -7,7 +7,6 @@ from scipy.integrate import quad
 # Define the Oscillator class
 class Oscillator:
     
-
     # Define the constructor
     def __init__(self, inertia1, inertia3, stifness10, stifness23, ratio ):
         """
@@ -26,13 +25,13 @@ class Oscillator:
 
     def __str__(self):
         """
-        Returns a string representation of the drone
+        Returns a string representation of the oscillator
         """
         return  "Oscillator with inertia1 {} kg*m^2, inertia2 {} kg*m^2, stifness10 {} N/m, stifness23 {} N/m, and ratio {}".format(self.inertia1, self.inertia2, self.stifness10, self.stifness23, self.ratio)
 
     def setConditions(self, theta1, theta3, thetadot1, thetadot3):
         """
-        Sets the initial conditions of the drone
+        Sets the initial conditions of the oscillator
         
         args:
             x0: initial x position in m
@@ -44,11 +43,8 @@ class Oscillator:
         """
         self.stVec[-1, :] = [theta1, theta3, thetadot1, thetadot1]
 
-
-    
     def control(self, t, y):
         pass
-
 
     def eqGenerator(self):
         """
@@ -61,7 +57,7 @@ class Oscillator:
         """
         def eq(t, y):
             """
-            Returns the equations of motion for the drone
+            Returns the equations of motion for the oscillator
             args:
                 t: time in s
                 y: state vector
@@ -128,7 +124,7 @@ class Oscillator:
 
     def solve(self, t0, tf, dt):
         """
-        Solves the equations of motion for the drone
+        Solves the equations of motion for the oscillator
         args:
             t0: initial time in s
             tf: final time in s
@@ -143,7 +139,7 @@ class Oscillator:
     
     def integrate(tVect,varVect):
         """
-        Integrates the equations of motion for the drone
+        Integrates the equations of motion for the oscillator
         args:
             tVect: time vector
             varVect: state vector
