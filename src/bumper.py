@@ -27,7 +27,7 @@ class CarBumper:
         self.t = np.zeros(1)
         self.cmd = np.zeros(1) # [x1]
         self.cmdTmp = np.zeros(1)
-        self.xt_func = self.bumbTimeProfile # function to describe the bump profile in time
+        self.xt_func = self.bumpTimeProfile # function to describe the bump profile in time
         self.eq = None # equations of motion
 
 
@@ -56,7 +56,7 @@ class CarBumper:
     def control(self, t, y):
         pass
 
-    def bumbSpaceProfile(self, x):
+    def bumpSpaceProfile(self, x):
         """
         Returns the bump height at position x
         args:
@@ -69,7 +69,7 @@ class CarBumper:
         else:
             return 0
     
-    def bumbTimeProfile(self, t):
+    def bumpTimeProfile(self, t):
         """
         Returns the bump height at time t
         args:
@@ -78,7 +78,7 @@ class CarBumper:
             y: bump height at time t in m
         """
         x = self.cv*t
-        return self.bumbSpaceProfile(x)
+        return self.bumpSpaceProfile(x)
 
     def eqGenerator(self):
         """
@@ -166,14 +166,14 @@ class CarBumper:
         fig, axes = plt.subplots(2, 3)
         fig.set_size_inches(18.5, 10.5)
         axes[0, 0].plot(self.t, self.envec[:, 0], 'r')
-        axes[0, 0].set_title('Kinetic Energy mass 1')
+        axes[0, 0].set_title('Kinetic Energy car body')
         axes[0, 0].set_ylabel('Energy (J)')
         axes[0, 0].set_xlabel('Time (s)')
-        axes[1, 0].plot(self.t, self.envec[:, 1], 'b')
-        axes[1, 0].set_title('Kinetic Energy mass 2')
+        axes[1, 0].plot(self.t, self.envec[:, 1], 'r')
+        axes[1, 0].set_title('Kinetic Energy wheel')
         axes[1, 0].set_ylabel('Energy (J)')
         axes[1, 0].set_xlabel('Time (s)')
-        axes[0, 1].plot(self.t, self.envec[:, 2], 'r')
+        axes[0, 1].plot(self.t, self.envec[:, 2], 'b')
         axes[0, 1].set_title('Potential Energy spring')
         axes[0, 1].set_ylabel('Energy (J)')
         axes[0, 1].set_xlabel('Time (s)')
@@ -202,14 +202,14 @@ class CarBumper:
         """
         t = np.linspace(0, t_sim, nb_points)
         x = t*self.cv
-        y = [self.bumbSpaceProfile(x) for x in x]
+        y = [self.bumpSpaceProfile(x) for x in x]
         fig, axes = plt.subplots(2, 1)
         fig.set_size_inches(18.5, 10.5)
         axes[0].plot(x, y,'r')
         axes[0].set_title('Bump profile in space')
         axes[0].set_xlabel('Position (m)')
         axes[0].set_ylabel('Bump height (m)')
-        y = [self.bumbTimeProfile(t) for t in t]
+        y = [self.bumpTimeProfile(t) for t in t]
         axes[1].plot(t, y,'b')
         axes[1].set_title('Bump profile in time')
         axes[1].set_xlabel('Time (s)')
@@ -250,7 +250,7 @@ class CarBumper:
     
     def energy(self):
         """
-        Calculates the energy of the oscillator
+        Calculates the kinetic and potential energy of the oscillator
         args:
             None
         returns:
@@ -258,21 +258,22 @@ class CarBumper:
         """
         ke1 = 0.5*self.m1*self.stVec[:,2]**2
         ke2 = 0.5*self.m2*self.stVec[:,3]**2
-        pe_spring = 0.5*self.k*(self.stVec[:,0]-self.stVec[:,1])**2
-        pe_tire = 0.5*self.kt*(self.stVec[:,1]-np.array([self.xt_func(ti) for ti in self.t]))**2
+        pe_spring = 0.5*self.k*(self.stVec[:,0]-self.stVec[:,1])**2 + self.m1*self.g*self.stVec[:,0]
+        pe_tire = 0.5*self.kt*(self.stVec[:,1]-np.array([self.xt_func(ti) for ti in self.t]))**2 + self.m2*self.g*self.stVec[:,1]
         self.envec = np.vstack((ke1,ke2,pe_spring,pe_tire)).T
         return self.envec
     
 def main():
-    t_sim = 10.0
-    bumper = CarBumper(mass1=465., mass2=50., k=5700., kt=135.e3, damping=450.,bump_height=.2,bump_width=.50,car_velocity=5.,bumper_position=20.0)
+    t_sim = 15.0
+    bumper = CarBumper(mass1=465., mass2=50., k=5700., kt=135.e3, damping=2900,bump_height=.1,bump_width=5.,car_velocity=5.,bumper_position=0.0)
     print(bumper)
+    print(bumper.__doc__)
     bumper.g = 0.0  # set gravity to zero for this simulation
     bumper.setConditions(x1_0=0.0, x2_0=0.0, x1dot_0=0.0, x2dot_0=0.0)
     #bumper.plotBumpProfile(t_sim=t_sim,nb_points=1000)   
     bumper.solve(t0=0.0, tf=t_sim, dt=0.01)
     bumper.plot()
-    bumper.plotEnergy()
+    #bumper.plotEnergy()
 
 
     
