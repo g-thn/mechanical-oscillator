@@ -7,7 +7,6 @@ from scipy.integrate import quad
 # Define the Oscillator class
 class Oscillator:
     
-
     # Define the constructor
     def __init__(self, mass0, mass1, stiffness0, stiffness1, length0,nb_masses=5):
         """
@@ -65,7 +64,7 @@ class Oscillator:
         """
         def eq(t, y):
             """
-            Returns the equations of motion for the drone
+            Returns the equations of motion for the oscillator
             args:
                 t: time in s
                 y: state vector
@@ -208,6 +207,7 @@ def main():
                      1.0, # l0
                      nb_masses=3)
     print(osc)
+    print(osc.stVec)
     osc.eqGenerator()
     #osc.setConditions([0.0, 10., 1.0, 1.0, 1.0, 1.0], [0.0, .0, .0, .0, .0, .0])
     osc.setConditions([0.0, 1.10, 1.0, 1.2], [0., 0., 0., 0.])
