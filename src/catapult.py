@@ -53,18 +53,19 @@ class Catapult:
         pass
     
     def ratio(self,z):
-        return None
+        return 10.0 #z + 1.0
     
     def ratiodot(self, z):
-        return None
+        return 0.0#1.0
     
     def ratioddot(self, z):
-        return None
+        return 0.0
+
+    def phi(self, z2, zdot2):
+        return z2*self.ratiodot(z2) + self.ratio(z2)
     
-
-
-    def phi(z2, zdot2):
-        return 0.5*Catapult.m2*zdot2**2 + Catapult.m2*Catapult.g*z2
+    def psi(self, z2, zdot2):
+        return zdot2**2*(z2*self.ratioddot(z2) + 2*self.ratiodot(z2))
     
     def eqGenerator(self):
         """
@@ -89,11 +90,14 @@ class Catapult:
             # ydot = [xdot, ydot, thetadot, xddot, yddot, thetaddot]
             #self.pid(t, y)
             self.control(t, y)
+            f = self.ratio(y[1])
+            phi_ = self.phi(y[1], y[3])
+            psi_ = self.psi(y[1], y[3])
             ydot = 0.*self.stVec[-1, :]#np.zeros(4)
             ydot[0] = y[2] # define z1dot
             ydot[1] = y[3] # define z2dot
-            ydot[2] = -self.k10/self.m1*y[0] - self.k23*self.r*(-self.r*y[0]-y[1])/self.m1 # -self.k10/self.m1*y[0] + self.r*self.k23/self.m1*(y[1]-y[0]) #define z1ddot
-            ydot[3] = self.k23/self.m2*(-self.r*y[0] - y[1])#-self.k23/self.m2*(y[1]-y[0])# define z2ddot
+            ydot[3] = (self.g*(self.m2 - f*self.m1) + self.m1*f*psi_)/(self.m1*f*phi_ + self.m2) #define z1ddot
+            ydot[2] = -(ydot[3]*phi_ + psi_)# define z2ddot
             return ydot
         self.eq = eq
     
@@ -121,18 +125,20 @@ class Catapult:
         # Separate the plots
         fig.tight_layout(pad=3.0)
         ymax = 1.1*max(np.max(self.stVec[:, 0]),np.max(self.stVec[:, 1]))
-
+        vmax = 1.1*max(np.max(abs(self.stVec[:, 2])),np.max(abs(self.stVec[:, 3])))
         axs[0].plot(self.t, self.stVec[:, 0],'r')
-        axs[0].set_title('Theta 1')
-        axs[0].set_ylabel('angle (rad)')
+        axs[0].plot(self.t, self.stVec[:, 1],'b')
+        axs[0].set_title('Position')
+        axs[0].set_ylabel('Height (m)')
         axs[0].set_xlabel('Time (s)')
         axs[0].set_ylim(-ymax, ymax)
 
-        axs[1].plot(self.t, self.stVec[:, 1],'b')
-        axs[1].set_title('Theta 2')
-        axs[1].set_ylabel('angle (rad)')
+        axs[1].plot(self.t, self.stVec[:, 2],'r')
+        axs[1].plot(self.t, self.stVec[:, 3],'b')
+        axs[1].set_title('Velocity')
+        axs[1].set_ylabel('Velocity (m/s)')
         axs[1].set_xlabel('Time (s)')
-        axs[1].set_ylim(-ymax, ymax)
+        axs[1].set_ylim(-vmax, vmax)
 
         plt.show()
 
@@ -179,12 +185,12 @@ class Catapult:
         pass
     
 def main():
-    osc = Catapult(10., .1, .1, 10., 5.)
-    osc.eqGenerator()
-    osc.setConditions(100., 0., 0., 0.)
+    cata = Catapult(1., 100., 9.81)
+    cata.eqGenerator()
+    cata.setConditions(0., 0., 0., 0.)
     print('Starting simulation')
-    osc.solve(0, 100, 0.01)
-    osc.plot()
+    cata.solve(0, 1, 0.01)
+    cata.plot()
     
 if __name__ == "__main__":
     main()
