@@ -21,7 +21,7 @@ class Catapult:
         self.k2 = .10
         self.k3 = .0
         self.lengthRamp = 3.0
-        self.heightFall = 1.0
+        self.heightFall = 100.0
         self.leftRamp = False
         self.tStop = 0.0
         self.stVec = np.zeros((1, 4))
@@ -57,10 +57,10 @@ class Catapult:
         pass
     
     def ratio(self,z):
-        return self.k1*z**10 + self.k2 
+        return 10. + z*0.#self.k1*z**10 + self.k2 
     
     def ratiodot(self, z):
-        return 10*self.k1*z**9 + self.k2
+        return 0. + z*0.#10*self.k1*z**9 + self.k2
     
     def ratioddot(self, z):
         return 0.
@@ -108,8 +108,8 @@ class Catapult:
                     self.tStop = t
             else:
                 ydot[0] = y[2] # define z1dot
-                ydot[1] = 0. # define z2dot
-                ydot[3] = 0. #define z1ddot
+                ydot[1] = 0.#y[3]#0. # define z2dot
+                ydot[3] = 0.#-self.m2*self.g#0. #define z1ddot
                 ydot[2] = -self.m1*self.g# define z2ddot
                 self.leftRamp = True
             return ydot
@@ -127,6 +127,24 @@ class Catapult:
         self.t = np.append(self.t, t)
         if not self.leftRamp:
             self.tStop = t
+            
+    def computeEnergy(self):
+        """
+        Computes the energy of the catapult
+        args:
+            None
+        returns:
+            ep1 = potential energy of mass 1
+            ep2 = potential energy of mass 2
+            ek1 = kinetic energy of mass 1
+            ek2 = kinetic energy of mass 2
+        """
+        ep1 = self.m1*self.g*self.stVec[:, 0]
+        ep2 = self.m2*self.g*self.stVec[:, 1]
+        ek1 = 0.5*self.m1*self.stVec[:, 2]**2
+        ek2 = 0.5*self.m2*self.stVec[:, 3]**2
+        return ep1, ep2, ek1, ek2
+        
     
     def plot(self):
         """
@@ -134,7 +152,7 @@ class Catapult:
         args:
             None
         """
-        fig, axs = plt.subplots(3, 1)
+        fig, axs = plt.subplots(2, 1)
         # Make the figure large
         fig.set_size_inches(18.5, 10.5)
 
@@ -163,17 +181,68 @@ class Catapult:
         axs[1].set_ylim(-vmax, vmax)
         axs[1].legend()
 
-        axs[2].plot(self.t, 100*.5*self.m1*self.stVec[:, 2]**2/(self.m2*self.heightFall*self.g),'r', label='mass 1')
+        plt.show()
+
+    def plotEnergy(self):
+        ep1, ep2, ek1, ek2 = self.computeEnergy()
+        print('Max potential energy: {}'.format(np.max(ep1+ep2)))
+        print('Max kinetic energy: {}'.format(np.max(ek1+ek2)))
+        #del fig, axs
+        fig, axs = plt.subplots(3, 1)
+        # Make the figure large
+        fig.set_size_inches(18.5, 10.5)
+
+        # Separate the plots
+        fig.tight_layout(pad=3.0)
+        epmax = 1.1*max(np.max(ep1), np.max(ep2))
+        epmin = 1.1*min(np.min(ep1), np.min(ep2))
+        ekmax = 1.1*max(np.max(ek1), np.max(ek2))
+        ekmin = 1.1*min(np.min(ek1), np.min(ek2))
+        axs[0].plot(self.t, ep1,'r', label='mass 1')
+        axs[0].plot(self.t, ep2,'b', label='mass 2')
+        axs[0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[0].grid()
+        axs[0].set_title('Potential Energy')
+        axs[0].set_ylabel('Energy (J)')
+        axs[0].set_xlabel('Time (s)')
+        axs[0].set_ylim(epmin, epmax)
+        axs[0].legend()
+
+        axs[1].plot(self.t, ek1,'r', label='mass 1')
+        axs[1].plot(self.t, ek2,'b', label='mass 2')
+        axs[1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[1].grid()
+        axs[1].set_title('Kinetic Energy')
+        axs[1].set_ylabel('Energy (J)')
+        axs[1].set_xlabel('Time (s)')
+        axs[1].set_ylim(ekmin, ekmax)
+        axs[1].legend()
+
+        axs[2].plot(self.t, ep1+ek1,'r', label='mass 1')
+        axs[2].plot(self.t, ep2+ek2,'b', label='mass 2')
+        axs[2].plot(self.t, ep1+ep2+ek1+ek2,'k', label='total')
         axs[2].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
         axs[2].grid()
-        axs[2].set_title('% of energy used')
-        axs[2].set_ylabel('(Kinetic energy 1)/(Potential energy 2) (%)')
+        axs[2].set_title('Total Energy')
+        axs[2].set_ylabel('Energy (J)')
         axs[2].set_xlabel('Time (s)')
-        axs[2].set_ylim(-emax, emax)
+        axs[2].set_ylim(1.1*min(np.min(ep1+ek1), np.min(ep2+ek2)), 1.1*max(np.max(ep1+ek1), np.max(ep2+ek2)))
         axs[2].legend()
 
         plt.show()
-
+    
+    def plotPhasePortraits(self):
+        plt.plot(self.stVec[:, 0], self.stVec[:, 2], 'r', label='mass 1')
+        plt.plot(-self.stVec[:, 1], -self.stVec[:, 3], 'b', label='mass 2')
+        plt.axvline(0, color='k', linestyle='--')
+        plt.axhline(0, color='k', linestyle='--')
+        plt.grid()
+        plt.title('Phase Portraits')
+        plt.xlabel('Position (m)')
+        plt.ylabel('Velocity (m/s)')
+        plt.legend()
+        plt.show()
+    
     def plotControl(self):
         pass
     
@@ -230,9 +299,11 @@ def main():
     cata.eqGenerator()
     cata.setConditions(0., 0., 0., 0.)
     print('Starting simulation')
-    cata.solve(0, .52, 0.001)
+    cata.solve(0, 1., 0.001)
     cata.plotRatio()
     cata.plot()
+    cata.plotEnergy()
+    cata.plotPhasePortraits()
     
 if __name__ == "__main__":
     main()
