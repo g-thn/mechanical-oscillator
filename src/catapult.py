@@ -21,7 +21,7 @@ class Catapult:
         self.k2 = .10
         self.k3 = .0
         self.lengthRamp = 3.0
-        self.heightFall = 100.0
+        self.heightFall = 1.0
         self.leftRamp = False
         self.tStop = 0.0
         self.stVec = np.zeros((1, 4))
@@ -98,7 +98,7 @@ class Catapult:
             phi_ = self.phi(y[1], y[3])
             psi_ = self.psi(y[1], y[3])
             ydot = 0.*self.stVec[-1, :]#np.zeros(4)
-            if (y[0] < self.lengthRamp) & (not self.leftRamp): #(y[1] > -self.heightFall) & 
+            if (y[0] < self.lengthRamp) & (not self.leftRamp) & (y[1] > -self.heightFall): #(y[1] > -self.heightFall) & 
                 ydot[0] = y[2] # define z1dot
                 ydot[1] = y[3] # define z2dot
                 ydot[3] = -(self.g*(self.m2 - f*self.m1) + self.m1*f*psi_)/(self.m1*f*phi_ + self.m2) #define z1ddot
@@ -109,8 +109,9 @@ class Catapult:
             else:
                 ydot[0] = y[2] # define z1dot
                 ydot[1] = 0.#y[3]#0. # define z2dot
-                ydot[3] = 0.#-self.m2*self.g#0. #define z1ddot
                 ydot[2] = -self.m1*self.g# define z2ddot
+                ydot[3] = 0.#-self.m2*self.g#0. #define z1ddot
+                
                 self.leftRamp = True
             return ydot
         self.eq = eq
@@ -188,7 +189,7 @@ class Catapult:
         print('Max potential energy: {}'.format(np.max(ep1+ep2)))
         print('Max kinetic energy: {}'.format(np.max(ek1+ek2)))
         #del fig, axs
-        fig, axs = plt.subplots(3, 1)
+        fig, axs = plt.subplots(2, 2)
         # Make the figure large
         fig.set_size_inches(18.5, 10.5)
 
@@ -198,42 +199,63 @@ class Catapult:
         epmin = 1.1*min(np.min(ep1), np.min(ep2))
         ekmax = 1.1*max(np.max(ek1), np.max(ek2))
         ekmin = 1.1*min(np.min(ek1), np.min(ek2))
-        axs[0].plot(self.t, ep1,'r', label='mass 1')
-        axs[0].plot(self.t, ep2,'b', label='mass 2')
-        axs[0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
-        axs[0].grid()
-        axs[0].set_title('Potential Energy')
-        axs[0].set_ylabel('Energy (J)')
-        axs[0].set_xlabel('Time (s)')
-        axs[0].set_ylim(epmin, epmax)
-        axs[0].legend()
 
-        axs[1].plot(self.t, ek1,'r', label='mass 1')
-        axs[1].plot(self.t, ek2,'b', label='mass 2')
-        axs[1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
-        axs[1].grid()
-        axs[1].set_title('Kinetic Energy')
-        axs[1].set_ylabel('Energy (J)')
-        axs[1].set_xlabel('Time (s)')
-        axs[1].set_ylim(ekmin, ekmax)
-        axs[1].legend()
+        axs[0, 0].plot(self.t, ep1,'r', label='mass 1')
+        axs[0, 0].plot(self.t, ep2,'b', label='mass 2')
+        axs[0, 0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[0, 0].grid()
+        axs[0, 0].set_title('Potential Energy')
+        axs[0, 0].set_ylabel('Energy (J)')
+        axs[0, 0].set_xlabel('Time (s)')
+        axs[0, 0].set_ylim(epmin, epmax)
+        axs[0, 0].legend()
 
-        axs[2].plot(self.t, ep1+ek1,'r', label='mass 1')
-        axs[2].plot(self.t, ep2+ek2,'b', label='mass 2')
-        axs[2].plot(self.t, ep1+ep2+ek1+ek2,'k', label='total')
-        axs[2].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
-        axs[2].grid()
-        axs[2].set_title('Total Energy')
-        axs[2].set_ylabel('Energy (J)')
-        axs[2].set_xlabel('Time (s)')
-        axs[2].set_ylim(1.1*min(np.min(ep1+ek1), np.min(ep2+ek2)), 1.1*max(np.max(ep1+ek1), np.max(ep2+ek2)))
-        axs[2].legend()
+        axs[0, 1].plot(self.t, ek1,'r', label='mass 1')
+        axs[0, 1].plot(self.t, ek2,'b', label='mass 2')
+        axs[0, 1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[0, 1].grid()
+        axs[0, 1].set_title('Kinetic Energy')
+        axs[0, 1].set_ylabel('Energy (J)')
+        axs[0, 1].set_xlabel('Time (s)')
+        axs[0, 1].set_ylim(ekmin, ekmax)
+        axs[0, 1].legend()
+
+        axs[1, 0].plot(self.t, 100*ek1/np.max(-ep2),'r', label='mass 1')
+        # axs[1, 0].plot(self.t, ek2,'b', label='mass 2')
+        #axs[1, 0].plot(self.t, ek1/1000,'r', label='mass 1')
+        axs[1, 0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[1, 0].grid()
+        axs[1, 0].set_title('Energy efficiency')
+        axs[1, 0].set_ylabel('Energy used (%)')
+        axs[1, 0].set_xlabel('Time (s)')
+        axs[1, 0].set_ylim(0,1.1*max(100*ek1/np.max(-ep2)))
+        axs[1, 0].legend()
+
+        axs[1, 1].plot(self.t, ep1+ek1,'r', label='mass 1 total')
+        axs[1, 1].plot(self.t, ek1,'r-.', linewidth = .75, label='mass 1 kinetic')
+        axs[1, 1].plot(self.t, ep1,'r--', linewidth = .75, label='mass 1 potential')
+        axs[1, 1].plot(self.t, ep2+ek2,'b', label='mass 2')
+        axs[1, 1].plot(self.t, ek2,'b-.', linewidth = .75, label='mass 2 kinetic')
+        axs[1, 1].plot(self.t, ep2,'b--', linewidth = .75, label='mass 2 potential')
+        axs[1, 1].plot(self.t, ep1+ep2+ek1+ek2,'k', label='total')
+        axs[1, 1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[1, 1].grid()
+        axs[1, 1].set_title('Total Energy')
+        axs[1, 1].set_ylabel('Energy (J)')
+        axs[1, 1].set_xlabel('Time (s)')
+        axs[1, 1].set_ylim(1.1*min(np.min(ep1+ek1),np.min(ep2+ek2),np.min(ep1),np.min(ep2),np.min(ek1),np.min(ek2)), 1.1*max(np.max(ep1+ek1), np.max(ep2+ek2),np.max(ep1), np.max(ep2), np.max(ek1), np.max(ek2)))
+        axs[1, 1].legend()
 
         plt.show()
     
-    def plotPhasePortraits(self):
-        plt.plot(self.stVec[:, 0], self.stVec[:, 2], 'r', label='mass 1')
-        plt.plot(-self.stVec[:, 1], -self.stVec[:, 3], 'b', label='mass 2')
+    def plotPhasePortraits(self,accelOnly = True):
+        if accelOnly:
+            indStop = np.where(self.t >= self.tStop)[0][0]
+            plt.plot(self.stVec[0:indStop, 0], self.stVec[0:indStop, 2], 'r', label='mass 1')
+            plt.plot(-self.stVec[0:indStop, 1], -self.stVec[0:indStop, 3], 'b', label='mass 2')
+        else:
+            plt.plot(self.stVec[:, 0], self.stVec[:, 2], 'r', label='mass 1')
+            plt.plot(-self.stVec[:, 1], -self.stVec[:, 3], 'b', label='mass 2')
         plt.axvline(0, color='k', linestyle='--')
         plt.axhline(0, color='k', linestyle='--')
         plt.grid()
