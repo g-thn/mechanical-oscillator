@@ -20,8 +20,8 @@ class Catapult:
         self.k1 = 10.
         self.k2 = .10
         self.k3 = .0
-        self.lengthRamp = 3.0
-        self.heightFall = 100.
+        self.lengthRamp = 100.0
+        self.heightFall = 1.5
         self.leftRamp = False
         self.tStop = 0.0
         self.stVec = np.zeros((1, 4))
@@ -162,6 +162,8 @@ class Catapult:
         ymax = 1.1*max(np.max(self.stVec[:, 0]),np.max(-self.stVec[:, 1]))
         vmax = 1.1*max(np.max(self.stVec[:, 2]),np.max(-self.stVec[:, 3]))
         accmax = 1.1*max(np.max(np.gradient(self.stVec[:, 2], self.t)),np.max(-np.gradient(self.stVec[:, 3], self.t)))
+        accmin = 1.1*min(np.min(np.gradient(self.stVec[:, 2], self.t)),np.min(-np.gradient(self.stVec[:, 3], self.t)))
+
         axs[0, 0].plot(self.t, self.stVec[:, 0],'r', label='mass 1')
         axs[0, 0].plot(self.t, -self.stVec[:, 1],'b', label='mass 2')
         axs[0, 0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
@@ -169,7 +171,7 @@ class Catapult:
         axs[0, 0].set_title('Position')
         axs[0, 0].set_ylabel('Height (m)')
         axs[0, 0].set_xlabel('Time (s)')
-        axs[0, 0].set_ylim(-ymax, ymax)
+        axs[0, 0].set_ylim(0., ymax)
         axs[0, 0].legend()
 
         axs[0, 1].plot(self.t, self.stVec[:, 2],'r', label='mass 1')
@@ -179,7 +181,7 @@ class Catapult:
         axs[0, 1].set_title('Velocity')
         axs[0, 1].set_ylabel('Velocity (m/s)')
         axs[0, 1].set_xlabel('Time (s)')
-        axs[0, 1].set_ylim(-vmax, vmax)
+        axs[0, 1].set_ylim(0., vmax)
         axs[0, 1].legend()
 
         axs[1, 0].plot(self.t, np.gradient(self.stVec[:, 2], self.t),'r', label='mass 1')
@@ -189,7 +191,7 @@ class Catapult:
         axs[1, 0].set_title('Acceleration')
         axs[1, 0].set_ylabel('Acceleration (m/s^2)')
         axs[1, 0].set_xlabel('Time (s)')
-        axs[1, 0].set_ylim(-accmax, accmax)
+        axs[1, 0].set_ylim(accmin, accmax)
         axs[1, 0].legend()
 
         plt.show()
@@ -232,7 +234,7 @@ class Catapult:
 
         axs[1, 0].plot(self.t, 100*ek1/np.max(-ep2),'r', label='mass 1')
         # axs[1, 0].plot(self.t, ek2,'b', label='mass 2')
-        #axs[1, 0].plot(self.t, ek1/1000,'r', label='mass 1')
+        # axs[1, 0].plot(self.t, ek1/1000,'r', label='mass 1')
         axs[1, 0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
         axs[1, 0].grid()
         axs[1, 0].set_title('Energy efficiency')
@@ -266,8 +268,8 @@ class Catapult:
         else:
             plt.plot(self.stVec[:, 0], self.stVec[:, 2], 'r', label='mass 1')
             plt.plot(-self.stVec[:, 1], -self.stVec[:, 3], 'b', label='mass 2')
-        plt.axvline(0, color='k', linestyle='--')
-        plt.axhline(0, color='k', linestyle='--')
+        #plt.axvline(0, color='k', linestyle='--')
+        #plt.axhline(0, color='k', linestyle='--')
         plt.grid()
         plt.title('Phase Portraits')
         plt.xlabel('Position (m)')
@@ -277,7 +279,7 @@ class Catapult:
     
     def plotControl(self):
         pass
-    
+
     def plotRatio(self):
         z2 = np.linspace(0, self.heightFall, 100)
         ratio = self.ratio(z2)
@@ -325,18 +327,18 @@ class Catapult:
             energy: energy of the Catapult
         """
         pass
-    
+
 def main():
     cata = Catapult(1., 100., 9.81)
     cata.eqGenerator()
     cata.setConditions(0., 0., 0., 0.)
     print('Starting simulation')
-    cata.solve(0, 1., 0.001)
+    cata.solve(0, 50., 0.001)
     cata.plotRatio()
     cata.plot()
     cata.plotEnergy()
     cata.plotPhasePortraits()
-    
+
 if __name__ == "__main__":
     main()
     
