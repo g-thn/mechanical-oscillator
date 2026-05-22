@@ -21,7 +21,7 @@ class Catapult:
         self.k2 = .10
         self.k3 = .0
         self.lengthRamp = 3.0
-        self.heightFall = 1.0
+        self.heightFall = 100.
         self.leftRamp = False
         self.tStop = 0.0
         self.stVec = np.zeros((1, 4))
@@ -153,7 +153,7 @@ class Catapult:
         args:
             None
         """
-        fig, axs = plt.subplots(2, 1)
+        fig, axs = plt.subplots(2, 2)
         # Make the figure large
         fig.set_size_inches(18.5, 10.5)
 
@@ -161,26 +161,36 @@ class Catapult:
         fig.tight_layout(pad=3.0)
         ymax = 1.1*max(np.max(self.stVec[:, 0]),np.max(-self.stVec[:, 1]))
         vmax = 1.1*max(np.max(self.stVec[:, 2]),np.max(-self.stVec[:, 3]))
-        emax = 1.1*np.max(100*.5*self.m1*self.stVec[:, 2]**2/(self.m2*self.heightFall*self.g))
-        axs[0].plot(self.t, self.stVec[:, 0],'r', label='mass 1')
-        axs[0].plot(self.t, -self.stVec[:, 1],'b', label='mass 2')
-        axs[0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
-        axs[0].grid()
-        axs[0].set_title('Position')
-        axs[0].set_ylabel('Height (m)')
-        axs[0].set_xlabel('Time (s)')
-        axs[0].set_ylim(-ymax, ymax)
-        axs[0].legend()
+        accmax = 1.1*max(np.max(np.gradient(self.stVec[:, 2], self.t)),np.max(-np.gradient(self.stVec[:, 3], self.t)))
+        axs[0, 0].plot(self.t, self.stVec[:, 0],'r', label='mass 1')
+        axs[0, 0].plot(self.t, -self.stVec[:, 1],'b', label='mass 2')
+        axs[0, 0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[0, 0].grid()
+        axs[0, 0].set_title('Position')
+        axs[0, 0].set_ylabel('Height (m)')
+        axs[0, 0].set_xlabel('Time (s)')
+        axs[0, 0].set_ylim(-ymax, ymax)
+        axs[0, 0].legend()
 
-        axs[1].plot(self.t, self.stVec[:, 2],'r', label='mass 1')
-        axs[1].plot(self.t, -self.stVec[:, 3],'b', label='mass 2')
-        axs[1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
-        axs[1].grid()
-        axs[1].set_title('Velocity')
-        axs[1].set_ylabel('Velocity (m/s)')
-        axs[1].set_xlabel('Time (s)')
-        axs[1].set_ylim(-vmax, vmax)
-        axs[1].legend()
+        axs[0, 1].plot(self.t, self.stVec[:, 2],'r', label='mass 1')
+        axs[0, 1].plot(self.t, -self.stVec[:, 3],'b', label='mass 2')
+        axs[0, 1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[0, 1].grid()
+        axs[0, 1].set_title('Velocity')
+        axs[0, 1].set_ylabel('Velocity (m/s)')
+        axs[0, 1].set_xlabel('Time (s)')
+        axs[0, 1].set_ylim(-vmax, vmax)
+        axs[0, 1].legend()
+
+        axs[1, 0].plot(self.t, np.gradient(self.stVec[:, 2], self.t),'r', label='mass 1')
+        axs[1, 0].plot(self.t, -np.gradient(self.stVec[:, 3], self.t),'b', label='mass 2')  
+        axs[1, 0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[1, 0].grid()
+        axs[1, 0].set_title('Acceleration')
+        axs[1, 0].set_ylabel('Acceleration (m/s^2)')
+        axs[1, 0].set_xlabel('Time (s)')
+        axs[1, 0].set_ylim(-accmax, accmax)
+        axs[1, 0].legend()
 
         plt.show()
 
