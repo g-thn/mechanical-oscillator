@@ -57,10 +57,10 @@ class Catapult:
         pass
     
     def ratio(self,z):
-        return 10. + z*0.#self.k1*z**10 + self.k2 
+        return self.k1*z**10 + self.k2 
     
     def ratiodot(self, z):
-        return 0. + z*0.#10*self.k1*z**9 + self.k2
+        return 10*self.k1*z**9
     
     def ratioddot(self, z):
         return 0.
