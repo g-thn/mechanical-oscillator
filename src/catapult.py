@@ -42,12 +42,10 @@ class Catapult:
         Sets the initial conditions of the catapult
         
         args:
-            x0: initial x position in m
-            y0: initial y position in m
-            theta0: initial angle in radians
-            xdot0: initial x velocity in m/s
-            ydot0: initial y velocity in m/s
-            thetadot0: initial angular velocity in rad/s
+            z1: initial x position in m
+            z2: initial y position in m
+            zdot1: initial x velocity in m/s
+            zdot2: initial y velocity in m/s
         """
         self.stVec[-1, :] = [z1, z2, zdot1, zdot2]
 
@@ -89,11 +87,7 @@ class Catapult:
             returns:
                 ydot: derivative of the state vector
             """
-
-            # y = [x, y, theta, xdot, ydot, thetadot]
-            # ydot = [xdot, ydot, thetadot, xddot, yddot, thetaddot]
-            #self.pid(t, y)
-            self.control(t, y)
+            # self.control(t, y)
             f = self.ratio(y[1])
             phi_ = self.phi(y[1], y[3])
             psi_ = self.psi(y[1], y[3])
