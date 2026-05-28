@@ -16,7 +16,7 @@ class CatapultWheel:
         self.m2 = mass2
         self.g = gravity
         # Ration function parameters
-        self.k1 = 1.
+        self.k1 = -1.
         self.k2 = .10
         self.k3 = .0
         self.lengthRamp = 3.0
@@ -106,7 +106,7 @@ class CatapultWheel:
                 ydot[0] = y[2] # define z1dot
                 ydot[1] = y[3] # define z2dot
                 ydot[2] = self.m2*f*(self.g - fdot*y[2]**2)/(self.in1 + self.m2*f**2) #define thetaddot
-                ydot[3] = (fdot*y[2]**2 + f*ydot[2])# define z2ddot
+                ydot[3] = -(fdot*y[2]**2 + f*ydot[2])# define z2ddot
                 # if ydot[2] < 0:
                 #     self.leftRamp = True
                 #     self.tStop = t
@@ -138,9 +138,9 @@ class CatapultWheel:
         args:
             None
         returns:
-            ep1 = potential energy of mass 1
+            ep1 = potential energy of wheel (zero)
             ep2 = potential energy of mass 2
-            ek1 = kinetic energy of mass 1
+            ek1 = rotational energy of wheel
             ek2 = kinetic energy of mass 2
         """
         ep1 = 0*self.stVec[:, 0]
@@ -225,7 +225,7 @@ class CatapultWheel:
         epmin = 1.1*min(np.min(ep1), np.min(ep2))
         ekmax = 1.1*max(np.max(ek1), np.max(ek2))
         ekmin = 1.1*min(np.min(ek1), np.min(ek2))
-        axs[0].plot(self.t, ep1,'r', label='mass 1')
+        axs[0].plot(self.t, ep1,'r', label='wheel')
         axs[0].plot(self.t, ep2,'b', label='mass 2')
         axs[0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
         axs[0].grid()
@@ -235,7 +235,7 @@ class CatapultWheel:
         axs[0].set_ylim(epmin, epmax)
         axs[0].legend()
 
-        axs[1].plot(self.t, ek1,'r', label='mass 1')
+        axs[1].plot(self.t, ek1,'r', label='wheel')
         axs[1].plot(self.t, ek2,'b', label='mass 2')
         axs[1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
         axs[1].grid()
@@ -245,7 +245,7 @@ class CatapultWheel:
         axs[1].set_ylim(ekmin, ekmax)
         axs[1].legend()
 
-        axs[2].plot(self.t, ep1+ek1,'r', label='mass 1')
+        axs[2].plot(self.t, ep1+ek1,'r', label='wheel')
         axs[2].plot(self.t, ep2+ek2,'b', label='mass 2')
         axs[2].plot(self.t, ep1+ep2+ek1+ek2,'k', label='total')
         axs[2].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
@@ -266,7 +266,7 @@ class CatapultWheel:
         returns:
             None
         """
-        plt.plot(self.stVec[:, 0], self.stVec[:, 2], 'r', label='mass 1')
+        plt.plot(self.stVec[:, 0], self.stVec[:, 2], 'r', label='wheel')
         plt.plot(-self.stVec[:, 1], -self.stVec[:, 3], 'b', label='mass 2')
         plt.grid()
         plt.title('Phase Portraits')
