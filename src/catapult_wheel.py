@@ -16,11 +16,12 @@ class CatapultWheel:
         self.m2 = mass2
         self.g = gravity
         # Ration function parameters
-        self.k1 = 10.
+        self.k1 = 1.
         self.k2 = .10
         self.k3 = .0
         self.lengthRamp = 3.0
         self.heightFall = 100.0
+        self.maxAngle = 10.*2*np.pi
         self.leftRamp = False
         self.tStop = 0.0
         self.stVec = np.zeros((1, 4))
@@ -54,10 +55,24 @@ class CatapultWheel:
         pass
     
     def ratio(self,theta):
-        return 100.+0.*theta#*theta#self.k1*theta**10 + self.k2 
+        """
+        Returns the ratio function for the catapult
+        args:
+            theta: angle in radians
+        returns:
+            ratio: the ratio function value
+        """
+        return self.k1*theta #*theta#self.k1*theta**10 + self.k2 
     
     def ratiodot(self, theta):
-        return 0.*theta#100.#10*self.k1*theta**9
+        """
+        Returns the derivative of the ratio function for the catapult
+        args:
+            theta: angle in radians
+        returns:
+            ratiodot: the derivative of the ratio function value
+        """
+        return self.k1 + 0.*theta # 100.#10*self.k1*theta**9
     
     def eqGenerator(self):
         """
@@ -82,22 +97,22 @@ class CatapultWheel:
             # ydot = [xdot, ydot, thetadot, xddot, yddot, thetaddot]
             #self.pid(t, y)
             #self.control(t, y)
-            f = self.ratio(y[1])
-            fdot = self.ratiodot(y[1])
+            f = self.ratio(y[0])
+            fdot = self.ratiodot(y[0])
             #phi_ = self.phi(y[1], y[3])
             #psi_ = self.psi(y[1], y[3])
             ydot = 0.*self.stVec[-1, :]#np.zeros(4)
-            if (y[0] < self.lengthRamp) & (not self.leftRamp): #(y[1] > -self.heightFall) & 
+            if (y[1] < self.lengthRamp) & (not self.leftRamp):
                 ydot[0] = y[2] # define z1dot
                 ydot[1] = y[3] # define z2dot
                 ydot[2] = self.m2*f*(self.g - fdot*y[2]**2)/(self.in1 + self.m2*f**2) #define thetaddot
-                ydot[3] = -(fdot*y[2]**2 + f*ydot[2])# define z2ddot
-                if ydot[2] < 0:
-                    self.leftRamp = True
-                    self.tStop = t
+                ydot[3] = (fdot*y[2]**2 + f*ydot[2])# define z2ddot
+                # if ydot[2] < 0:
+                #     self.leftRamp = True
+                #     self.tStop = t
             else:
                 ydot[0] = y[2] # define z1dot
-                ydot[1] = 0.#y[3]#0. # define z2dot
+                ydot[1] = y[3] #y[3]#0. # define z2dot
                 ydot[2] = 0.#-self.m2*self.g#0. #define z1ddot
                 ydot[3] = -self.m2*self.g# define z2ddot
                 self.leftRamp = True
@@ -141,40 +156,61 @@ class CatapultWheel:
         args:
             None
         """
-        fig, axs = plt.subplots(2, 1)
+        fig, axs = plt.subplots(2, 2)
         # Make the figure large
         fig.set_size_inches(18.5, 10.5)
 
         # Separate the plots
         fig.tight_layout(pad=3.0)
-        ymax = 1.1*max(np.max(self.stVec[:, 0]),np.max(-self.stVec[:, 1]))
-        vmax = 1.1*max(np.max(self.stVec[:, 2]),np.max(-self.stVec[:, 3]))
-        emax = 1.1*np.max(100*.5*self.in1*self.stVec[:, 2]**2/(self.m2*self.heightFall*self.g))
-        axs[0].plot(self.t, self.stVec[:, 0],'r', label='mass 1')
-        axs[0].plot(self.t, self.stVec[:, 1],'b', label='mass 2')
-        axs[0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
-        axs[0].grid()
-        axs[0].set_title('Position')
-        axs[0].set_ylabel('Height (m)')
-        #set second ylable for angle
-        axs[0].twinx().set_ylabel('Angle (rad)')
-        axs[0].set_xlabel('Time (s)')
-        axs[0].set_ylim(-ymax, ymax)
-        axs[0].legend()
 
-        axs[1].plot(self.t, self.stVec[:, 2],'r', label='mass 1')
-        axs[1].plot(self.t, self.stVec[:, 3],'b', label='mass 2')
-        axs[1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
-        axs[1].grid()
-        axs[1].set_title('Velocity')
-        axs[1].set_ylabel('Velocity (m/s)')
-        axs[1].set_xlabel('Time (s)')
-        axs[1].set_ylim(-vmax, vmax)
-        axs[1].legend()
+        axs[0, 0].plot(self.t, self.stVec[:, 0],'r', label='wheel')
+        axs[0, 0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[0, 0].grid()
+        axs[0, 0].set_title('Position')
+        axs[0, 0].set_ylabel('angle (rad)')
+        axs[0, 0].set_xlabel('Time (s)')
+        ##axs[0, 0].set_ylim(-ymax, ymax)
+        axs[0, 0].legend()
+
+        axs[0, 1].plot(self.t, self.stVec[:, 1],'b', label='mass 2')
+        axs[0, 1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[0, 1].grid()
+        axs[0, 1].set_title('Position')
+        axs[0, 1].set_ylabel('Height (m)')
+        axs[0, 1].set_xlabel('Time (s)')
+        # axs[0, 1].set_ylim(-ymax, ymax)
+        axs[0, 1].legend()
+
+        axs[1, 0].plot(self.t, self.stVec[:, 2],'r', label='wheel')
+        axs[1, 0].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[1, 0].grid()
+        axs[1, 0].set_title('Angular Velocity')
+        axs[1, 0].set_ylabel('Angular Velocity (rad/s)')
+        axs[1, 0].set_xlabel('Time (s)')
+        # axs[1, 0].set_ylim(-vmax, vmax)
+        axs[1, 0].legend()
+
+        axs[1, 1].plot(self.t, self.stVec[:, 3],'b', label='mass 2')
+        axs[1, 1].axvline(self.tStop, color='k', linestyle='--', label='end of ramp')
+        axs[1, 1].grid()
+        axs[1, 1].set_title('Velocity')
+        axs[1, 1].set_ylabel('Velocity (m/s)')
+        axs[1, 1].set_xlabel('Time (s)')
+        # axs[1, 1].set_ylim(-vmax, vmax)
+        axs[1, 1].legend()
 
         plt.show()
 
     def plotEnergy(self):
+        """
+        Plots the energy of the catapult
+        args:
+            None
+        returns:
+            None
+        
+        """
+
         ep1, ep2, ek1, ek2 = self.computeEnergy()
         print('Max potential energy: {}'.format(np.max(ep1+ep2)))
         print('Max kinetic energy: {}'.format(np.max(ek1+ek2)))
@@ -223,10 +259,15 @@ class CatapultWheel:
         plt.show()
     
     def plotPhasePortraits(self):
+        """
+        Plots the phase portraits of the catapult
+        args:
+            None
+        returns:
+            None
+        """
         plt.plot(self.stVec[:, 0], self.stVec[:, 2], 'r', label='mass 1')
         plt.plot(-self.stVec[:, 1], -self.stVec[:, 3], 'b', label='mass 2')
-        plt.axvline(0, color='k', linestyle='--')
-        plt.axhline(0, color='k', linestyle='--')
         plt.grid()
         plt.title('Phase Portraits')
         plt.xlabel('Position (m)')
@@ -238,12 +279,33 @@ class CatapultWheel:
         pass
     
     def plotRatio(self):
-        z2 = np.linspace(0, self.heightFall, 100)
-        ratio = self.ratio(z2)
-        plt.plot(z2, ratio)
+        """Plots the ratio function of the catapult
+        args:
+            None
+        returns:
+            None"""
+        theta = np.linspace(0, self.maxAngle, 100)
+        ratio = self.ratio(theta)
+        plt.plot(theta, ratio)
         plt.title('Ratio function')
-        plt.xlabel('z2 (m)')
+        plt.xlabel('theta (rad)')
         plt.ylabel('Ratio')
+        plt.show()
+
+    def plotRatioPolar(self):
+        """Plots the ratio function of the catapult in polar coordinates
+        args:
+            None
+        returns:
+            None"""
+        
+        theta = np.linspace(0, self.maxAngle, 1000)
+        ratio = self.ratio(theta)
+        plt.polar(theta, ratio)
+        plt.title('Ratio function in polar coordinates')
+        plt.xlabel('theta (rad)')
+        plt.ylabel('Ratio')
+        #plt.axis('equal')
         plt.show()
 
     def animate(self):
@@ -286,12 +348,13 @@ class CatapultWheel:
         pass
     
 def main():
-    cata = CatapultWheel(1., 1., 9.81)
+    cata = CatapultWheel(100., 1., 9.81)
     cata.eqGenerator()
-    cata.setConditions(0., 0., 0., 0.)
+    cata.setConditions(0., 0., 100*2*np.pi/60., 0.)
     print('Starting simulation')
-    cata.solve(0, 1., 0.001)
+    cata.solve(0, 10., 0.001)
     cata.plotRatio()
+    cata.plotRatioPolar()
     cata.plot()
     cata.plotEnergy()
     cata.plotPhasePortraits()
