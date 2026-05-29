@@ -16,7 +16,7 @@ class CatapultWheel:
         self.m2 = mass2
         self.g = gravity
         # Ration function parameters
-        self.k1 = -1.
+        self.k1 = -.001
         self.k2 = .10
         self.k3 = .0
         self.lengthRamp = 3.0
@@ -35,7 +35,7 @@ class CatapultWheel:
         """
         Returns a string representation of the catapult
         """
-        return  "Catapult with mass 1 {} kg and mass 2 {} kg*m^2".format(self.mass1, self.inertia2, self.stifness10, self.stifness23, self.ratio)
+        return  "Catapult with inertia 1 {} kg and mass 2 {} kg*m^2, ramp length {}".format(self.in1, self.m2, self.lengthRamp)
 
     def setConditions(self, theta0, z0, thetaot0, zdot0):
         """
@@ -48,11 +48,6 @@ class CatapultWheel:
             zdot0: initial y velocity in m/s
         """
         self.stVec[-1, :] = [theta0, z0, thetaot0, zdot0]
-
-
-    
-    def control(self, t, y):
-        pass
     
     def ratio(self,theta):
         """
@@ -62,7 +57,7 @@ class CatapultWheel:
         returns:
             ratio: the ratio function value
         """
-        return self.k1*theta #*theta#self.k1*theta**10 + self.k2 
+        return self.k1*(np.exp(self.k2*theta)-1) #*theta#self.k1*theta**10 + self.k2 
     
     def ratiodot(self, theta):
         """
@@ -72,7 +67,7 @@ class CatapultWheel:
         returns:
             ratiodot: the derivative of the ratio function value
         """
-        return self.k1 + 0.*theta # 100.#10*self.k1*theta**9
+        return self.k1*self.k2*(np.exp(self.k2*theta)) # 100.#10*self.k1*theta**9
     
     def eqGenerator(self):
         """
@@ -93,10 +88,6 @@ class CatapultWheel:
                 ydot: derivative of the state vector
             """
 
-            # y = [x, y, theta, xdot, ydot, thetadot]
-            # ydot = [xdot, ydot, thetadot, xddot, yddot, thetaddot]
-            #self.pid(t, y)
-            #self.control(t, y)
             f = self.ratio(y[0])
             fdot = self.ratiodot(y[0])
             #phi_ = self.phi(y[1], y[3])
@@ -107,7 +98,7 @@ class CatapultWheel:
                 ydot[1] = y[3] # define z2dot
                 ydot[2] = self.m2*f*(self.g - fdot*y[2]**2)/(self.in1 + self.m2*f**2) #define thetaddot
                 ydot[3] = -(fdot*y[2]**2 + f*ydot[2])# define z2ddot
-                # if ydot[2] < 0:
+              # if ydot[2] < 0:
                 #     self.leftRamp = True
                 #     self.tStop = t
             else:
@@ -132,7 +123,7 @@ class CatapultWheel:
         if not self.leftRamp:
             self.tStop = t
             
-    def computeEnergy(self):
+    def energy(self):
         """
         Computes the energy of the catapult
         args:
@@ -211,7 +202,7 @@ class CatapultWheel:
         
         """
 
-        ep1, ep2, ek1, ek2 = self.computeEnergy()
+        ep1, ep2, ek1, ek2 = self.energy()
         print('Max potential energy: {}'.format(np.max(ep1+ep2)))
         print('Max kinetic energy: {}'.format(np.max(ek1+ek2)))
         #del fig, axs
@@ -301,7 +292,7 @@ class CatapultWheel:
         
         theta = np.linspace(0, self.maxAngle, 1000)
         ratio = self.ratio(theta)
-        plt.polar(theta, ratio)
+        plt.polar(theta, np.abs(ratio))
         plt.title('Ratio function in polar coordinates')
         plt.xlabel('theta (rad)')
         plt.ylabel('Ratio')
@@ -337,22 +328,12 @@ class CatapultWheel:
         """
         return np.trapz(varVect,tVect)
     
-    def energy(self):
-        """
-        Calculates the energy of the Catapult
-        args:
-            None
-        returns:
-            energy: energy of the Catapult
-        """
-        pass
-    
 def main():
-    cata = CatapultWheel(100., 1., 9.81)
+    cata = CatapultWheel(10., 1., 9.81)
     cata.eqGenerator()
-    cata.setConditions(0., 0., 100*2*np.pi/60., 0.)
+    cata.setConditions(0., 0., 1500*2*np.pi/60., 0.)
     print('Starting simulation')
-    cata.solve(0, 10., 0.001)
+    cata.solve(0, 1., 0.001)
     cata.plotRatio()
     cata.plotRatioPolar()
     cata.plot()
